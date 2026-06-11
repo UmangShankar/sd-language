@@ -1,6 +1,6 @@
 {
-  "version": "0.1.0",
-  "note": "Seed lexicon for SD Language v0.1. The root/stem/pronoun inventory MIRRORS the verified FST closed sets in lib/src/fst.ts (the source of truth); lexicon/validate.mjs enforces exact parity so this file can never silently drift from the code. 'status' follows SD-1 §7.1 (canonical = attested lexicon; addition = spec addition). IPA enrichment is pending (the spec stores IPA in its private DB but does not enumerate per-root values in §7.1).",
+  "version": "0.2.0",
+  "note": "Seed lexicon for SD Language. roots/stems/pronouns/coinages are full lexical entries (round-tripped through the verified codec; coinages also FST-checked via 'derivation'). particles/postpositions are CLOSED-SET PARITY REFERENCES only: they mirror lib/src/fst.ts PARTICLES/POSTP for the parity contract and are NOT round-tripped, because some (e.g. kēruṁ, ōṁ) use Tier-1 vowels ē/ō that the Simplified codec does not encode. 'status' follows SD-1 §7.1 (canonical = attested; addition = spec addition).",
   "spec": {
     "language": "spec/SD-language-design-v1.md",
     "script": "spec/SD-unified-script-v1.md"
@@ -66,15 +66,44 @@
     { "form": "i",   "gloss": "PROX",       "meaning": "proximal demonstrative (this)" }
   ],
   "coinages": [
-    { "term": "velocity",     "sd": "^gati-vat",          "form": "gati-vat",          "parse_back": ["gati", "vat"],            "gloss": "gati·RATE",                "literal": "motion-rate",          "register": "Core" },
-    { "term": "acceleration", "sd": "^gati-vat-vat",      "form": "gati-vat-vat",      "parse_back": ["gati", "vat", "vat"],     "gloss": "gati·RATE·RATE",           "literal": "motion-rate-rate",     "register": "Core" },
-    { "term": "displacement", "sd": "^sthā-naṁ-bhid-ma",  "form": "sthā-naṁ-bhid-ma",  "parse_back": ["sthā", "naṁ", "bhid", "ma"], "gloss": "sthā·LOC.NMLZ-bhid·ABSTR", "literal": "place-differing-ness", "register": "Core" },
-    { "term": "electron",     "sd": "^vidyut-aṇu",        "form": "vidyut-aṇu",        "parse_back": ["vidyut", "aṇu"],          "gloss": "vidyut·PARTICLE",          "literal": "electricity-particle", "register": "Core" },
-    { "term": "entropy",      "sd": "^vikīr-tva",         "form": "vikīr-tva",         "parse_back": ["vikīr", "tva"],           "gloss": "vikīr·PROP",               "literal": "scatteredness",        "register": "Core" },
-    { "term": "energy",       "sd": "^ūrjā-aṅka",         "form": "ūrjā-aṅka",         "parse_back": ["ūrjā", "aṅka"],           "gloss": "ūrjā·MEASURE",             "literal": "energy-quantity",      "register": "Core" },
-    { "term": "temperature",  "sd": "^tāpa-aṅka",         "form": "tāpa-aṅka",         "parse_back": ["tāpa", "aṅka"],           "gloss": "tāpa·MEASURE",             "literal": "heat-measure",         "register": "Core" },
-    { "term": "wavelength",   "sd": "^taraṅga-dīrgha-ma", "form": "taraṅga-dīrgha-ma", "parse_back": ["taraṅga", "dīrgha", "ma"], "gloss": "taraṅga-dīrgha·ABSTR",     "literal": "wave-length-ness",     "register": "Core" },
-    { "term": "derivative",   "sd": "^kṣaṇa-vat",         "form": "kṣaṇa-vat",         "parse_back": ["kṣaṇa", "vat"],           "gloss": "kṣaṇa·RATE",               "literal": "instant-rate",         "register": "Core" },
-    { "term": "hypothesis",   "sd": "^kalp-ma",           "form": "kalp-ma",           "parse_back": ["kalp", "ma"],             "gloss": "kalp·ABSTR",               "literal": "supposition",          "register": "Core" }
+    { "term": "velocity",     "sd": "^gati-vat",          "form": "gati-vat",          "derivation": "gati·RATE",                "literal": "motion-rate",          "register": "Core" },
+    { "term": "acceleration", "sd": "^gati-vat-vat",      "form": "gati-vat-vat",      "derivation": "gati·RATE·RATE",           "literal": "motion-rate-rate",     "register": "Core" },
+    { "term": "displacement", "sd": "^sthā-naṁ-bhid-ma",  "form": "sthā-naṁ-bhid-ma",  "derivation": "sthā·LOC.NMLZ-bhid·ABSTR", "literal": "place-differing-ness", "register": "Core" },
+    { "term": "electron",     "sd": "^vidyut-aṇu",        "form": "vidyut-aṇu",        "derivation": "vidyut·PARTICLE",          "literal": "electricity-particle", "register": "Core" },
+    { "term": "entropy",      "sd": "^vikīr-tva",         "form": "vikīr-tva",         "derivation": "vikīr·PROP",               "literal": "scatteredness",        "register": "Core" },
+    { "term": "energy",       "sd": "^ūrjā-aṅka",         "form": "ūrjā-aṅka",         "derivation": "ūrjā·MEASURE",             "literal": "energy-quantity",      "register": "Core" },
+    { "term": "temperature",  "sd": "^tāpa-aṅka",         "form": "tāpa-aṅka",         "derivation": "tāpa·MEASURE",             "literal": "heat-measure",         "register": "Core" },
+    { "term": "wavelength",   "sd": "^taraṅga-dīrgha-ma", "form": "taraṅga-dīrgha-ma", "derivation": "taraṅga-dīrgha·ABSTR",     "literal": "wave-length-ness",     "register": "Core" },
+    { "term": "derivative",   "sd": "^kṣaṇa-vat",         "form": "kṣaṇa-vat",         "derivation": "kṣaṇa·RATE",               "literal": "instant-rate",         "register": "Core" },
+    { "term": "hypothesis",   "sd": "^kalp-ma",           "form": "kalp-ma",           "derivation": "kalp·ABSTR",               "literal": "supposition",          "register": "Core" }
+  ],
+  "particles": [
+    { "form": "ca",      "meaning": "and" },
+    { "form": "vā",      "meaning": "or" },
+    { "form": "illa",    "meaning": "not (clausal NEG)" },
+    { "form": "yad",     "meaning": "if / which (relative)" },
+    { "form": "tad",     "meaning": "then / that (correlative)" },
+    { "form": "yo",      "meaning": "who (relative pronoun)" },
+    { "form": "so",      "meaning": "that-one (correlative)" },
+    { "form": "ka",      "meaning": "what / who (interrogative)" },
+    { "form": "kāya",    "meaning": "interrogative particle" },
+    { "form": "kēruṁ",   "meaning": "interrogative particle" },
+    { "form": "vāḷa",    "meaning": "interrogative particle" },
+    { "form": "ṭhēla",   "meaning": "interrogative particle" },
+    { "form": "aiyo",    "meaning": "emotive particle" },
+    { "form": "āṇi",     "meaning": "emotive particle" },
+    { "form": "ēla",     "meaning": "emotive particle" },
+    { "form": "bhaṛa",   "meaning": "emotive particle" },
+    { "form": "ṭṛṣa",    "meaning": "refrain" },
+    { "form": "vāmā",    "meaning": "refrain" },
+    { "form": "ōṁ",      "meaning": "refrain (sacred syllable)" },
+    { "form": "oṁ",      "meaning": "refrain (sacred syllable)" },
+    { "form": "anupāta", "meaning": "ratio" },
+    { "form": "prati",   "meaning": "per (also postposition)" },
+    { "form": "sama",    "meaning": "equals" },
+    { "form": "tas-mā",  "meaning": "therefore" }
+  ],
+  "postpositions": [
+    { "form": "prati", "gloss": "PER", "meaning": "per (hyphen-attached, e.g. kāla-prati 'per time')" }
   ]
 }
