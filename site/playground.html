@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SD Language — Playground</title>
+<style>
+  :root {
+    --bg: #faf8f3; --ink: #1c1a17; --muted: #6b6459; --line: #e3ddd0;
+    --accent: #8a5a2b; --ok: #1f7a4d; --bad: #b3261e; --card: #fffdf8;
+    --mono: ui-monospace, "SFMono-Regular", "Cascadia Code", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+  header h1 { font-size: 1.9rem; margin: 0 0 .25rem; letter-spacing: .01em; }
+  header p { color: var(--muted); margin: 0 0 1.75rem; }
+  header .tag {
+    display: inline-block; font: 600 .7rem/1 var(--mono); text-transform: uppercase;
+    letter-spacing: .08em; color: var(--accent); border: 1px solid var(--line);
+    border-radius: 999px; padding: .35rem .6rem; margin-bottom: 1rem;
+  }
+  label { display: block; font-size: .8rem; color: var(--muted); margin: 0 0 .4rem; }
+  #input {
+    width: 100%; font: 1.15rem/1.4 var(--mono); padding: .8rem .9rem;
+    border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink);
+  }
+  #input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .chips { margin: .8rem 0 0; display: flex; flex-wrap: wrap; gap: .45rem; }
+  .chip {
+    font: .82rem/1 var(--mono); padding: .45rem .6rem; border: 1px solid var(--line);
+    border-radius: 8px; background: var(--card); color: var(--accent); cursor: pointer;
+  }
+  .chip:hover { border-color: var(--accent); }
+  .out { margin-top: 1.75rem; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--card); }
+  .row { display: grid; grid-template-columns: 130px 1fr; border-top: 1px solid var(--line); }
+  .row:first-child { border-top: 0; }
+  .row .k { padding: .8rem .9rem; font: 600 .78rem/1.4 var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: .04em; background: #f4efe5; }
+  .row .v { padding: .8rem .9rem; font: 1rem/1.5 var(--mono); white-space: pre-wrap; word-break: break-word; }
+  .v .ok { color: var(--ok); font-weight: 600; }
+  .v .bad { color: var(--bad); font-weight: 600; }
+  .v.err { color: var(--bad); }
+  /* SD-1 glyph row: drop in @font-face { font-family:'SD-1'; src:url(...) } later and it renders. */
+  .sd1 { font-family: "SD-1", var(--mono); font-size: 1.5rem; letter-spacing: .05em; }
+  .hint { font: .75rem/1.5 var(--mono); color: var(--muted); }
+  footer { margin-top: 2rem; color: var(--muted); font-size: .85rem; }
+  footer code { font-family: var(--mono); background: #f4efe5; padding: .1rem .3rem; border-radius: 4px; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="tag">SD Language · QA Playground</div>
+    <h1>SD Language Playground</h1>
+    <p>Type ASCII/ITRANS or IAST. This runs the <strong>real, verified</strong> reference library
+       (translit + FST + parser) live in your browser — the same code the CLI and test suite use.</p>
+  </header>
+
+  <label for="input">Input (ASCII/ITRANS or IAST)</label>
+  <input id="input" autocomplete="off" autocapitalize="off" spellcheck="false"
+         value="tva ta asrasi {C}" />
+
+  <div class="chips" id="chips" aria-label="Spec §12 examples"></div>
+
+  <div class="out" id="out">
+    <div class="row"><div class="k">IAST</div><div class="v" id="iast"></div></div>
+    <div class="row"><div class="k">Codepoints</div><div class="v" id="cps"></div></div>
+    <div class="row"><div class="k">Round-trip</div><div class="v" id="rt"></div></div>
+    <div class="row"><div class="k">Gloss</div><div class="v" id="gloss"></div></div>
+    <div class="row"><div class="k">Notes</div><div class="v" id="notes"></div></div>
+    <div class="row"><div class="k">SD-1 (needs font)</div><div class="v"><span class="sd1" id="sd1"></span><div class="hint" id="sd1hint"></div></div></div>
+  </div>
+
+  <footer>
+    Pipeline mirrors <code>lib/src/cli.ts</code>. SD-1 glyphs show as Private-Use-Area characters
+    until the font from <code>font/</code> is installed; the render row is pre-wired to a
+    <code>@font-face</code> family named <code>SD-1</code>. &nbsp;·&nbsp;
+    Must be served over http (ES-module imports are blocked on <code>file://</code>) — see
+    <code>site/README.md</code>.
+  </footer>
+</div>
+
+<script type="module">
+  import {
+    asciiToIast, iastToCodepoints, codepointsToIast, formatCps,
+    tokenize, checkSentence,
+  } from "../lib/dist/src/index.js";
+
+  const $ = (id) => document.getElementById(id);
+  const input = $("input");
+
+  // Spec §12 worked examples (clickable).
+  const EXAMPLES = [
+    "tva ta asrasi {C}",
+    "śanuma vadruṁ-ai janrati\\",
+    "tat tvam asi {C}",
+    "yo ātmā-ai janrati, so naśrati illa\\ {C}",
+    "^gati-vat [[v]] kāla-prati ^sthā-naṁ-bhid-ma asrati. [[v = s/t]] — [[m/s]]",
+  ];
+  const chips = $("chips");
+  for (const ex of EXAMPLES) {
+    const b = document.createElement("button");
+    b.className = "chip";
+    b.type = "button";
+    b.textContent = ex;
+    b.addEventListener("click", () => { input.value = ex; render(); input.focus(); });
+    chips.appendChild(b);
+  }
+
+  function render() {
+    const raw = input.value;
+    // Mirror cli.ts exactly: normalise ASCII → IAST, then encode/analyze.
+    let iast;
+    try {
+      iast = asciiToIast(raw);
+    } catch (e) {
+      return showError("asciiToIast: " + e.message);
+    }
+    $("iast").textContent = iast;
+
+    let cps;
+    try {
+      cps = iastToCodepoints(iast);
+    } catch (e) {
+      $("cps").innerHTML = "";
+      $("rt").innerHTML = "";
+      $("gloss").textContent = "";
+      $("notes").innerHTML = '<span class="bad">' + escapeHtml(e.message) + "</span>";
+      $("sd1").textContent = "";
+      $("sd1hint").textContent = "";
+      return;
+    }
+    $("cps").textContent = formatCps(cps);
+
+    const back = codepointsToIast(cps);
+    const lossless = back === iast;
+    $("rt").innerHTML = lossless
+      ? '<span class="ok">OK (lossless)</span>'
+      : '<span class="bad">FAILED</span> — round-trips to “' + escapeHtml(back) + "”";
+
+    const check = checkSentence(tokenize(iast));
+    $("gloss").textContent = check.glossLine || "—";
+    $("notes").innerHTML = check.ok
+      ? '<span class="ok">well-formed</span>'
+      : (check.notes.length ? escapeHtml(check.notes.join("; ")) : "—");
+
+    // SD-1 render row: the actual PUA codepoints (renders once an SD-1 font is present).
+    const glyphs = cps.map((c) => String.fromCodePoint(c)).join("");
+    $("sd1").textContent = glyphs;
+    $("sd1hint").textContent = cps.length + " codepoints — install the SD-1 font to see glyphs";
+  }
+
+  function showError(msg) {
+    for (const id of ["iast", "cps", "rt", "gloss", "sd1", "sd1hint"]) $(id).textContent = "";
+    $("notes").innerHTML = '<span class="bad">' + escapeHtml(msg) + "</span>";
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  input.addEventListener("input", render);
+  render();
+</script>
+</body>
+</html>
