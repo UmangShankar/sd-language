@@ -12,3 +12,5 @@ jobs:
         with:
           node-version: 22
       - run: cd lib && npm ci && npm test
+      - run: cd lib && npm run build
+      - run: node lexicon/validate.mjs
