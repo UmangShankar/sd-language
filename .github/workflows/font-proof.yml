@@ -1,0 +1,78 @@
+name: SD-1 font proof
+
+on:
+  push:
+    branches:
+      - feat/sd1-core-font-proof
+    paths:
+      - "font/**"
+      - "lib/**"
+      - ".github/workflows/font-proof.yml"
+  pull_request:
+    paths:
+      - "font/**"
+      - "lib/**"
+      - ".github/workflows/font-proof.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-validate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'push' && github.ref_name || github.event.pull_request.head.sha }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: lib/package-lock.json
+
+      - name: Install font build dependencies
+        run: python -m pip install "fonttools>=4.55,<5" "brotli>=1.1,<2"
+
+      - name: Verify existing language implementation
+        working-directory: lib
+        run: |
+          npm ci
+          npm test
+
+      - name: Build provisional proof fonts and SVG masters
+        run: python font/scripts/build_proof_font.py
+
+      - name: Verify canonical proof sentence
+        run: node font/tests/proof_sample.mjs
+
+      - name: Run font conformance checks
+        run: python font/tests/test_proof_font.py
+
+      - name: Commit generated proof artefacts to the feature branch
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add font/builds font/glyphs/core-proof font/specimens/core-font-proof.html
+          if git diff --cached --quiet; then
+            echo "Generated artefacts are already current."
+          else
+            git commit -m "build(font): generate SD-1 proof artefacts"
+            git push
+          fi
+
+      - name: Upload review artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sd1-core-font-proof
+          path: |
+            font/builds/
+            font/glyphs/core-proof/
+            font/specimens/core-font-proof.html
